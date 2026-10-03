@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ComfyUI startup for Koyeb: downloads models on first boot, then launches
-# the server on port 8000. MODELS_DIR defaults to /data/models on the
+# the server on port 8188. MODELS_DIR defaults to /data/models on the
 # instance's local disk (no volume needed) — NOTE: Koyeb local disk is
 # ephemeral, models re-download on redeploy/instance rescheduling.
 set -uo pipefail
@@ -57,4 +57,4 @@ else
 fi
 
 echo "model dir ready, starting ComfyUI..."
-exec python /app/ComfyUI/main.py --listen 0.0.0.0 --port 8000
+exec python /app/ComfyUI/main.py --listen 0.0.0.0 --port 8188

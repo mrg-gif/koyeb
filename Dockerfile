@@ -54,5 +54,5 @@ COPY manager_config.ini /app/ComfyUI/user/__manager/config.ini
 COPY start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
-EXPOSE 8000
+EXPOSE 8188
 CMD ["/app/start.sh"]
