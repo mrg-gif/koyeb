@@ -1,0 +1,19 @@
+# ComfyUI looks for models in the Koyeb volume (mounted at /data/models)
+# in addition to its built-in models/ directory.
+koyeb_models:
+  base_path: /data/models
+  checkpoints: checkpoints
+  diffusion_models: diffusion_models
+  unet: unet
+  clip: clip
+  text_encoders: text_encoders
+  vae: vae
+  vae_approx: vae_approx
+  loras: loras
+  controlnet: controlnet
+  upscale_models: upscale_models
+  embeddings: embeddings
+  ipadapter: ipadapter
+  clip_vision: clip_vision
+  style_models: style_models
+  insightface: insightface
