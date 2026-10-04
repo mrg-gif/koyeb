@@ -10,9 +10,9 @@ mkdir -p "$MODELS_DIR"
 
 # url|subfolder|filename
 MODELS="
-https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_fp8_scaled.safetensors|diffusion_models|minimax_h3_fl2va_pruned_fp8_scaled.safetensors
-https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_ref2va_pruned_fp8_scaled.safetensors|diffusion_models|minimax_h3_ref2va_pruned_fp8_scaled.safetensors
-https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors|text_encoders|qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors
+https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_bf16.safetensors|diffusion_models|minimax_h3_fl2va_pruned_bf16.safetensors
+https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_ref2va_pruned_bf16.safetensors|diffusion_models|minimax_h3_ref2va_pruned_bf16.safetensors
+https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_bf16.safetensors|text_encoders|qwen3vl_32b_minimax_h3_bf16.safetensors
 https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors|vae|minimax_h3_audio_vae_fp32.safetensors
 https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors|vae|minimax_h3_video_vae_fp16.safetensors
 https://raw.githubusercontent.com/madebyollin/taehv/62f7591f59dfbb4c3c02b7a621d180a9eeaba26c/safetensors/taeh3.safetensors|vae_approx|taeh3.safetensors
@@ -46,7 +46,7 @@ if [ -n "${HF_TOKEN:-}" ]; then
     dir="$MODELS_DIR/loras/$repo"
     if [ ! -d "$dir" ] || [ -z "$(ls -A "$dir" 2>/dev/null)" ]; then
       echo "downloading dataset massshare/$repo -> $dir"
-      huggingface-cli download "massshare/$repo" --repo-type dataset \
+      hf download "massshare/$repo" --repo-type dataset \
         --local-dir "$dir" --token "$HF_TOKEN" || echo "dataset $repo failed"
     else
       echo "skip (exists): $dir"
