@@ -49,6 +49,13 @@ RUN for f in /app/ComfyUI/custom_nodes/*/requirements.txt; do \
 # ComfyUI master sometimes expects a newer frontend than requirements.txt pins
 RUN pip install --no-cache-dir "comfyui-frontend-package>=1.53.6" huggingface_hub
 
+# SageAttention (for KJNodes "Patch Sage Attention" node). Compiles CUDA
+# kernels at install time — needs the -devel image (nvcc) and ninja.
+# TORCH_CUDA_ARCH_LIST=9.0 builds only for Hopper (H100/H200), otherwise
+# it compiles for every arch and the build takes forever.
+RUN pip install --no-cache-dir ninja packaging
+RUN TORCH_CUDA_ARCH_LIST="9.0" pip install --no-cache-dir sageattention
+
 COPY extra_model_paths.yaml /app/ComfyUI/extra_model_paths.yaml
 COPY manager_config.ini /app/ComfyUI/user/__manager/config.ini
 COPY start.sh /app/start.sh
