@@ -43,7 +43,7 @@ done
 # --- LoRA collections from HF dataset repos (LFS-safe; needs HF_TOKEN secret) ---
 if [ -n "${HF_TOKEN:-}" ]; then
   for repo in mello community speedloras; do
-    dir="$MODELS_DIR/loras/$repo"
+    dir="$MODELS_DIR/loras/public/$repo"
     if [ ! -d "$dir" ] || [ -z "$(ls -A "$dir" 2>/dev/null)" ]; then
       echo "downloading dataset massshare/$repo -> $dir"
       hf download "massshare/$repo" --repo-type dataset \
