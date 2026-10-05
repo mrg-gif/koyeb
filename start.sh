@@ -42,7 +42,7 @@ done
 
 # --- LoRA collections from HF dataset repos (LFS-safe; needs HF_TOKEN secret) ---
 if [ -n "${HF_TOKEN:-}" ]; then
-  for repo in mello community; do
+  for repo in mello community speedloras; do
     dir="$MODELS_DIR/loras/$repo"
     if [ ! -d "$dir" ] || [ -z "$(ls -A "$dir" 2>/dev/null)" ]; then
       echo "downloading dataset massshare/$repo -> $dir"
@@ -53,7 +53,7 @@ if [ -n "${HF_TOKEN:-}" ]; then
     fi
   done
 else
-  echo "HF_TOKEN not set - skipping mello/community LoRA datasets"
+  echo "HF_TOKEN not set - skipping mello/community/speedloras LoRA datasets"
 fi
 
 echo "model dir ready, starting ComfyUI..."
