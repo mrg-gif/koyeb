@@ -10,7 +10,7 @@ FROM pytorch/pytorch:2.13.0-cuda13.0-cudnn9-devel
 ENV PIP_BREAK_SYSTEM_PACKAGES=1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git curl wget aria2 unzip libgl1 libglib2.0-0 \
+    git curl wget aria2 unzip libgl1 libglib2.0-0 cuda-compat-13-0 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
