@@ -4,7 +4,7 @@
 # /data/models on the instance's local disk on first boot (see start.sh)
 # — no Volume needed, but local disk is ephemeral (see start.sh notes).
 
-FROM pytorch/pytorch:2.13.0-cuda12.6-cudnn9-devel
+FROM pytorch/pytorch:2.13.0-cuda13.0-cudnn9-devel
 
 # Ubuntu 24.04's pip refuses system-wide installs (PEP 668); allow them
 ENV PIP_BREAK_SYSTEM_PACKAGES=1
