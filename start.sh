@@ -5,6 +5,10 @@
 # ephemeral, models re-download on redeploy/instance rescheduling.
 set -uo pipefail
 
+if [ -d /usr/local/cuda-13.0/compat ]; then
+  export LD_LIBRARY_PATH="/usr/local/cuda-13.0/compat:${LD_LIBRARY_PATH:-}"
+fi
+
 MODELS_DIR="${MODELS_DIR:-/data/models}"
 mkdir -p "$MODELS_DIR"
 
