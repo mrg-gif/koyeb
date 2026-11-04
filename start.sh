@@ -5,6 +5,7 @@
 # ephemeral, models re-download on redeploy/instance rescheduling.
 set -uo pipefail
 
+# Load the CUDA 13 forward-compat driver libs (host driver is CUDA 12.4-class)
 if [ -d /usr/local/cuda-13.0/compat ]; then
   export LD_LIBRARY_PATH="/usr/local/cuda-13.0/compat:${LD_LIBRARY_PATH:-}"
 fi
@@ -46,7 +47,7 @@ done
 
 # --- LoRA collections from HF dataset repos (LFS-safe; needs HF_TOKEN secret) ---
 if [ -n "${HF_TOKEN:-}" ]; then
-  for repo in mello community speedloras; do
+  for repo in mello mello2 community speedloras; do
     dir="$MODELS_DIR/loras/public/$repo"
     if [ ! -d "$dir" ] || [ -z "$(ls -A "$dir" 2>/dev/null)" ]; then
       echo "downloading dataset massshare/$repo -> $dir"
@@ -57,7 +58,7 @@ if [ -n "${HF_TOKEN:-}" ]; then
     fi
   done
 else
-  echo "HF_TOKEN not set - skipping mello/community/speedloras LoRA datasets"
+  echo "HF_TOKEN not set - skipping mello/mello2/community/speedloras LoRA datasets"
 fi
 
 echo "model dir ready, starting ComfyUI..."
