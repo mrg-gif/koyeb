@@ -4,14 +4,25 @@
 # /data/models on the instance's local disk on first boot (see start.sh)
 # — no Volume needed, but local disk is ephemeral (see start.sh notes).
 
+# cu130 required: comfy_kitchen's optimized CUDA kernels (sage int8 etc.)
+# are built for CUDA 13 — on the cu126 image they crash with
+# "CUDA driver version is insufficient for CUDA runtime version".
 FROM pytorch/pytorch:2.13.0-cuda13.0-cudnn9-devel
 
 # Ubuntu 24.04's pip refuses system-wide installs (PEP 668); allow them
 ENV PIP_BREAK_SYSTEM_PACKAGES=1
 
+# cuda-compat-13-0: Koyeb's host driver is CUDA 12.4-class (< 580), too old
+# for the cu130 runtime. The compat package ships a newer user-mode libcuda
+# that forward-supports CUDA 13.0 on 535+ drivers (per NVIDIA's matrix).
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git curl wget aria2 unzip libgl1 libglib2.0-0 cuda-compat-13-0 \
     && rm -rf /var/lib/apt/lists/*
+
+# cloudflared for the quick tunnel (bypasses Koyeb's proxy — see start.sh)
+RUN curl -fsSL -o /usr/local/bin/cloudflared \
+    https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 \
+    && chmod +x /usr/local/bin/cloudflared
 
 WORKDIR /app
 RUN git clone --depth 1 https://github.com/comfyanonymous/ComfyUI
