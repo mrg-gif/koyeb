@@ -5,20 +5,44 @@
 # ephemeral, models re-download on redeploy/instance rescheduling.
 set -uo pipefail
 
+# Load the CUDA 13 forward-compat driver libs (host driver is CUDA 12.4-class)
 if [ -d /usr/local/cuda-13.0/compat ]; then
   export LD_LIBRARY_PATH="/usr/local/cuda-13.0/compat:${LD_LIBRARY_PATH:-}"
 fi
 
+# --- Cloudflare quick tunnel: direct public URL that bypasses Koyeb's proxy ---
+# URL is random per boot (https://<random>.trycloudflare.com) — it is printed
+# below and also written to /data/models/tunnel_url.txt. Paste it into the
+# site's admin panel (Server 1 backend URL) after each boot.
+cloudflared tunnel --url http://localhost:8188 --no-autoupdate \
+  > /tmp/cloudflared.log 2>&1 &
+TUNNEL_URL=""
+for i in $(seq 1 30); do
+  TUNNEL_URL=$(grep -o "https://[a-z0-9-]*\.trycloudflare\.com" /tmp/cloudflared.log | head -1)
+  [ -n "$TUNNEL_URL" ] && break
+  sleep 1
+done
+echo "=================================================="
+echo "  CLOUDFLARE TUNNEL URL: ${TUNNEL_URL:-NOT READY - check /tmp/cloudflared.log}"
+echo "=================================================="
+
 MODELS_DIR="${MODELS_DIR:-/data/models}"
 mkdir -p "$MODELS_DIR"
+[ -n "$TUNNEL_URL" ] && echo "$TUNNEL_URL" > "$MODELS_DIR/tunnel_url.txt"
 
 # url|subfolder|filename
 MODELS="
 https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_bf16.safetensors|diffusion_models|minimax_h3_fl2va_pruned_bf16.safetensors
 https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_ref2va_pruned_bf16.safetensors|diffusion_models|minimax_h3_ref2va_pruned_bf16.safetensors
+https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/diffusion_models/minimax_h3_image_pruned_bf16.safetensors|diffusion_models|minimax_h3_image_pruned_bf16.safetensors
+https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/diffusion_models/minimax_music3_dit_fp32.safetensors|diffusion_models|minimax_music3_dit_fp32.safetensors
 https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_bf16.safetensors|text_encoders|qwen3vl_32b_minimax_h3_bf16.safetensors
+https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors|text_encoders|qwen3.5_9b_w4a8_gptq.safetensors
+https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/text_encoders/minimax_music3_text_encoder_pruned_bf16.safetensors|text_encoders|minimax_music3_text_encoder_pruned_bf16.safetensors
 https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors|vae|minimax_h3_audio_vae_fp32.safetensors
 https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors|vae|minimax_h3_video_vae_fp16.safetensors
+https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/vae/minimax_h3_image_vae_fp16.safetensors|vae|minimax_h3_image_vae_fp16.safetensors
+https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/vae/minimax_music3_dav.safetensors|vae|minimax_music3_dav.safetensors
 https://raw.githubusercontent.com/madebyollin/taehv/62f7591f59dfbb4c3c02b7a621d180a9eeaba26c/safetensors/taeh3.safetensors|vae_approx|taeh3.safetensors
 "
 
@@ -46,7 +70,7 @@ done
 
 # --- LoRA collections from HF dataset repos (LFS-safe; needs HF_TOKEN secret) ---
 if [ -n "${HF_TOKEN:-}" ]; then
-  for repo in mello community speedloras; do
+  for repo in mello mello2 community speedloras; do
     dir="$MODELS_DIR/loras/public/$repo"
     if [ ! -d "$dir" ] || [ -z "$(ls -A "$dir" 2>/dev/null)" ]; then
       echo "downloading dataset massshare/$repo -> $dir"
@@ -57,7 +81,7 @@ if [ -n "${HF_TOKEN:-}" ]; then
     fi
   done
 else
-  echo "HF_TOKEN not set - skipping mello/community/speedloras LoRA datasets"
+  echo "HF_TOKEN not set - skipping mello/mello2/community/speedloras LoRA datasets"
 fi
 
 echo "model dir ready, starting ComfyUI..."
