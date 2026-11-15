@@ -10,25 +10,37 @@ if [ -d /usr/local/cuda-13.0/compat ]; then
   export LD_LIBRARY_PATH="/usr/local/cuda-13.0/compat:${LD_LIBRARY_PATH:-}"
 fi
 
-# --- Cloudflare quick tunnel: direct public URL that bypasses Koyeb's proxy ---
-# URL is random per boot (https://<random>.trycloudflare.com) — it is printed
-# below and also written to /data/models/tunnel_url.txt. Paste it into the
-# site's admin panel (Server 1 backend URL) after each boot.
-cloudflared tunnel --url http://localhost:8188 --no-autoupdate \
-  > /tmp/cloudflared.log 2>&1 &
-TUNNEL_URL=""
-for i in $(seq 1 30); do
-  TUNNEL_URL=$(grep -o "https://[a-z0-9-]*\.trycloudflare\.com" /tmp/cloudflared.log | head -1)
-  [ -n "$TUNNEL_URL" ] && break
-  sleep 1
-done
+# --- Cloudflare tunnel: direct public URL that bypasses Koyeb's proxy ---
+# Two modes:
+#   1) NAMED tunnel (sustained URL — preferred): set the TUNNEL_TOKEN secret
+#      in Koyeb. The tunnel + public hostname are configured once in the
+#      Cloudflare Zero Trust dashboard (Networks -> Tunnels), and this
+#      instance reconnects to that SAME url on every boot. Nothing else to do.
+#   2) QUICK tunnel (fallback when TUNNEL_TOKEN is unset): random
+#      https://<random>.trycloudflare.com URL per boot, printed below.
+if [ -n "${TUNNEL_TOKEN:-}" ]; then
+  echo "starting NAMED cloudflare tunnel (sustained URL from dashboard config)"
+  cloudflared tunnel --no-autoupdate run --token "$TUNNEL_TOKEN" \
+    > /tmp/cloudflared.log 2>&1 &
+  TUNNEL_URL="named tunnel (see Cloudflare dashboard hostname)"
+else
+  echo "TUNNEL_TOKEN not set - falling back to quick tunnel (random URL per boot)"
+  cloudflared tunnel --url http://localhost:8188 --no-autoupdate \
+    > /tmp/cloudflared.log 2>&1 &
+  TUNNEL_URL=""
+  for i in $(seq 1 30); do
+    TUNNEL_URL=$(grep -o "https://[a-z0-9-]*\.trycloudflare\.com" /tmp/cloudflared.log | head -1)
+    [ -n "$TUNNEL_URL" ] && break
+    sleep 1
+  done
+fi
 echo "=================================================="
-echo "  CLOUDFLARE TUNNEL URL: ${TUNNEL_URL:-NOT READY - check /tmp/cloudflared.log}"
+echo "  CLOUDFLARE TUNNEL: ${TUNNEL_URL:-NOT READY - check /tmp/cloudflared.log}"
 echo "=================================================="
 
 MODELS_DIR="${MODELS_DIR:-/data/models}"
 mkdir -p "$MODELS_DIR"
-[ -n "$TUNNEL_URL" ] && echo "$TUNNEL_URL" > "$MODELS_DIR/tunnel_url.txt"
+case "$TUNNEL_URL" in https://*) echo "$TUNNEL_URL" > "$MODELS_DIR/tunnel_url.txt" ;; esac
 
 # url|subfolder|filename
 MODELS="
